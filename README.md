@@ -1,20 +1,20 @@
-# docker_nginx-letsencrypt
+# nginx-letsencrypt
 
-JrCs/docker-letsencrypt-nginx-proxy-companion is great but requires access to docker.sock in order to read their VIRTUAL_HOST environment variable. In some cases, you don't want or cannot give this access for security reason.
+JrCs/docker-letsencrypt-nginx-proxy-companion is great but requires access to docker.sock. Sometimes you don't want or can't give this access for security reason.
 
-Let's Encrypt can run in a different image than nginx but in case of certificate renewal, nginx will require a reload to take new certificate in account. This is why the best way is to keep them together in the same image.
+I choose to embed Let's Encrypt on the same image than nginx because in case of certificate renewal nginx requires a reload.  
 
-Instead of providing a complex image which would obtain your domains from environment variables and request certificates bundled or not according to your preferences through more environment variables, I prefered keeping it simple and request you to execute certbot manually. If more domains are added, the container does not have to be remove and create again with new variables.
+I also choose to avoid complex configuration based on several environment variables to define all your domains and how many different certificates you want. I kept it simple and let you launch certbot manually in the way you want. This is only required once or when you have a new virtualhost for which a certificate is needed.
 
 # Usage
 
-Declare 3 writable volumes for persistence :
+Declare 3 writable volumes :
 
-    /etc/letsencrypt where Let's encrypt files are created
-    /etc/nginx/conf.d where your nginx configuration files can be found
-    /usr/share/nginx/html where your nginx web pages can be found
+    /etc/letsencrypt - Let's encrypt files
+    /etc/nginx/conf.d - nginx configuration files
+    /usr/share/nginx/html - nginx root folder for web pages
 
-Expose the 80/tcp and/or 443/tcp ports. Your service on 443/tcp can use a selfsigned certificate by removing all ssl_ parameters in your server block. Just leave "listen 443 ssl;"
+Expose the 80/tcp and/or 443/tcp ports. You can use a selfsigned certificate by commenting any ssl_ parameters in your server block. Leave "listen 443 ssl;" directive.
 
 # Example
 
@@ -22,26 +22,26 @@ Expose the 80/tcp and/or 443/tcp ports. Your service on 443/tcp can use a selfsi
 
 # Obtaining certificates
 
-Execute by yourself the certbot command because if you want a thing done well, do it yourself:
+Execute the certbot command and follow the instruction:
     
     docker exec -it nginx-letsencrypt certbot --nginx certonly
 
-If you know the TOS, you can go faster :
+If you already know the ToS, go faster :
 
     docker exec -it nginx-letsencrypt certbot --nginx -d <firstdomain> -d <otherdomain> -n --agree-tos --email <your email> certonly
 
-If you want certbot to modify your nginx automatically with all the SSL parameters, remove "certonly" but first declare no ssl parameters in your nginx server block and do not listen on 443/tcp neither.
+If you want certbot to automatically fill your nginx server blocks with the required ssl_ directives, remove "certonly". This only works if there is no existing ssl_ directives and if you do not already listen a ssl port in your server block.
 
-If you want your domains in separate certificates, execute the cerbot several times with different domains.
+If you want several certificates with different domains instead of a single one with all domains bundled, execute cerbot for each certificate separately.
 
-If you need more certificate, you can launch the certbot at any time.
+If you need a new certificate, you can launch certbot at any time, modify your nginx configuration and restart the container to apply changes.
 
 # Using certificates
 
-The certificates are published in /etc/letsencrypt/live/\<firstdomain\>/ where \<firstdomain\> is the first provided domain : cert.pem, fullchain.pem, privkey.pem. 
-Prefer fullchain.pem instead of cert.pem as the intermediate certificates will be provided to clients.
+The certificates are published in /etc/letsencrypt/live/<firstdomain>/ where <firstdomain> is the first provided domain : cert.pem, fullchain.pem, privkey.pem. 
+Choose fullchain.pem instead of cert.pem as the intermediate certificates will be also provided during ssl handshake.
 
-Modify your nginx configuration files to add the SSL support. For instance :
+If you choose certonly option, modify manually your nginx configuration files to add SSL support:
 
     server {
     listen 443 ssl;
@@ -53,10 +53,10 @@ Modify your nginx configuration files to add the SSL support. For instance :
     ...
     }
 
-Then restart your container:
+Restart your container:
 
     docker restart nginx-letsencrypt
 
 # Renewing certificates
 
-A daily cron job is planned and will reload nginx. Nothing to do about it.
+A daily cron job is already planned. If a certificate is renewed, nginx will be automatically reload. Nothing to care about.

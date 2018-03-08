@@ -7,8 +7,8 @@ RUN apt-get update && apt-get -y install \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Schedule Let's encrypt renewal
-COPY ./certbot-renew.sh /etc/cron.daily/
-RUN chmod +x /etc/cron.daily/certbot-renew.sh
+COPY ./certbot-renew /etc/cron.daily/
+RUN chmod +x /etc/cron.daily/certbot-renew
 
 VOLUME /etc/nginx/conf.d
 VOLUME /usr/share/nginx/html

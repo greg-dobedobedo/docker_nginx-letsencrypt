@@ -10,10 +10,15 @@ RUN apt-get update && apt-get -y install \
 COPY ./certbot-renew /etc/cron.daily/
 RUN chmod +x /etc/cron.daily/certbot-renew
 
+# Remove default certbot script
+RUN rm -f /etc/cron.d/certbot
+
 VOLUME /etc/nginx/conf.d
 VOLUME /usr/share/nginx/html
 VOLUME /etc/letsencrypt/
 
 STOPSIGNAL SIGTERM
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY ./entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["bash", "-c", "/entrypoint.sh"]

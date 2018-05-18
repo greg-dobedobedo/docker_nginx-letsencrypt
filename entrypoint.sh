@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 service cron start
-nginx -g daemon off
+exec nginx -g 'daemon off;'

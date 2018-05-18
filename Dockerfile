@@ -21,4 +21,4 @@ STOPSIGNAL SIGTERM
 
 COPY ./entrypoint.sh /
 RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["bash", "-c", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

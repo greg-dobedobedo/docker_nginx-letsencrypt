@@ -69,3 +69,22 @@ docker restart nginx-letsencrypt
 # Renewing certificates
 
 A daily cron job is already planned. If a certificate is renewed, nginx will be automatically reload. Nothing to care about.
+
+# Known limitation
+
+Let's Encrypt has stopped offering the mechanism that Certbot's Apache and Nginx plugins use to prove you control a domain due to a security issue. See https://community.letsencrypt.org/t/2018-01-11-update-regarding-acme-tls-sni-and-shared-hosting-infrastructure/50188 for more info.
+
+In this case, you can use the authenticator webroot.
+
+Modify your nginx config file to listen on port 80 and to serve .well-known folder.
+```
+    listen 80;
+	location /.well-known/ {
+		root /usr/share/nginx/html/;
+	}
+```
+
+Then launch certbot.
+```
+certbot --authenticator webroot --installer nginx
+```
